@@ -3,6 +3,7 @@ from supabase import create_client
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 import os
+from typing import Annotated
 
 
 # إعدادات Supabase (تأكد من وضعها في Environment Variables على Railway)
@@ -24,7 +25,7 @@ class TodoItem(BaseModel):
     task_text: str
 
 @app.post("/add-todo")
-async def add_todo(item: TodoItem):
+async def add_todo(item: Annotated[TodoItem, Body(...)]):
     print(f"Received request with item: {item}")
     print(f"Task text: {item.task_text}")
     
