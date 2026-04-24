@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Request
 from supabase import create_client
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,29 +24,24 @@ app.add_middleware(
 class TodoItem(BaseModel):
     task_text: str
 
-@app.post("/add-todo")
-async def add_todo(request: Request):
+# تغيير المسار لـ /create-task بدلاً من /add-todo
+@app.post("/create-task") 
+async def create_task(request: Request):
     try:
-        # 1. طباعة الطلب الخام للتأكد من وصوله
         body = await request.json()
-        print(f"DEBUG: Received body: {body}") # هتظهر في Railway Logs
+        # طباعة واضحة جداً في اللوجز
+        print(f"********** NEW CODE WORKING: {body} **********")
         
         task_text = body.get("task_text")
-        
         if not task_text:
-            return {"status": "error", "message": "Field 'task_text' is missing"}
+            return {"status": "error", "message": "No text"}
 
-        # 2. تنفيذ الإضافة في Supabase
-        res = supabase.table("todos").insert({
-            "task": task_text,
-            "priority": "Medium"
-        }).execute()
-        
+        res = supabase.table("todos").insert({"task": task_text}).execute()
         return {"status": "success", "data": res.data}
     except Exception as e:
-        print(f"DEBUG: Error occurred: {str(e)}")
+        print(f"ERROR: {e}")
         return {"status": "error", "message": str(e)}
-
+    
 
 @app.get("/get-todos")
 async def get_todos():
