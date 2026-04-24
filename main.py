@@ -12,6 +12,8 @@ key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
 
 app = FastAPI()
+class TodoItem(BaseModel):
+    task_text: str
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,29 +23,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class TodoItem(BaseModel):
-    task_text: str
-
-# تغيير المسار لـ /create-task بدلاً من /add-todo
-@app.post("/create-task") 
-async def create_task(request: Request):
-    try:
-        body = await request.json()
-        # طباعة واضحة جداً في اللوجز
-        print(f"********** NEW CODE WORKING: {body} **********")
-        
-        task_text = body.get("task_text")
-        if not task_text:
-            return {"status": "error", "message": "No text"}
-
-        res = supabase.table("todos").insert({"task": task_text}).execute()
-        return {"status": "success", "data": res.data}
-    except Exception as e:
-        print(f"ERROR: {e}")
-        return {"status": "error", "message": str(e)}
-    
-
 @app.get("/get-todos")
 async def get_todos():
     response = supabase.table("todos").select("*").order("created_at", desc=True).execute()
     return response.data
+
+
+@app.post("/add-todo")
+async def add_todo(task_text: str = None, request: Request = None):
+    try:
+        # لو مبعوتة كـ Query Param في اللينك
+        final_text = task_text
+        
+        # لو مبعوتة كـ JSON Body
+        if not final_text and request:
+            body = await request.json()
+            final_text = body.get("task_text")
+
+        if not final_text:
+            return {"status": "error", "message": "No task text provided"}
+
+        res = supabase.table("todos").insert({"task": final_text}).execute()
+        return {"status": "success", "data": res.data}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
