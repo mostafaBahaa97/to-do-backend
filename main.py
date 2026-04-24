@@ -29,7 +29,7 @@ async def add_todo(item: TodoItem):
     print(f"Task text: {item.task_text}")
     
     try:
-        text = item.task_text
+        text = item.task_text.strip()
         
         if not text:
             return {"status": "error", "message": "No task text provided"}
@@ -37,7 +37,8 @@ async def add_todo(item: TodoItem):
         priority = "Medium"
         if any(word in text.lower() for word in ["urgent", "ضروري", "حالا"]):
             priority = "High"
-            
+        
+        print(f"Inserting: task='{text}', priority='{priority}'")
         data = supabase.table("todos").insert({
             "task": text,
             "priority": priority
@@ -46,10 +47,10 @@ async def add_todo(item: TodoItem):
         print(f"Data inserted successfully: {data.data}")
         return {"status": "success", "data": data.data}
     except Exception as e:
-        print(f"Server Error: {e}")
+        print(f"Server Error: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": str(e), "error_type": type(e).__name__}
 
 @app.get("/get-todos")
 async def get_todos():
