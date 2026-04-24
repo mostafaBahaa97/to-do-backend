@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body ,Request
+from fastapi import FastAPI, Body
 from supabase import create_client
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -24,11 +24,9 @@ class TodoItem(BaseModel):
     task_text: str
 
 @app.post("/add-todo")
-async def add_todo(request: Request): 
+async def add_todo(item: TodoItem): 
     try:
-        # قراءة البيانات الخام من الـ body
-        payload = await request.json()
-        text = payload.get("task_text")
+        text = item.task_text
         
         if not text:
             return {"status": "error", "message": "No task text provided"}
