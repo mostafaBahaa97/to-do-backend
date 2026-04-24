@@ -25,33 +25,28 @@ class TodoItem(BaseModel):
     task_text: str
 
 @app.post("/add-todo")
-async def add_todo(item: Annotated[TodoItem, Body(...)]):
-    print(f"Received request with item: {item}")
-    print(f"Task text: {item.task_text}")
-    
+async def add_todo(request: Request):
     try:
-        text = item.task_text.strip()
+        # 1. طباعة الطلب الخام للتأكد من وصوله
+        body = await request.json()
+        print(f"DEBUG: Received body: {body}") # هتظهر في Railway Logs
         
-        if not text:
-            return {"status": "error", "message": "No task text provided"}
+        task_text = body.get("task_text")
+        
+        if not task_text:
+            return {"status": "error", "message": "Field 'task_text' is missing"}
 
-        priority = "Medium"
-        if any(word in text.lower() for word in ["urgent", "ضروري", "حالا"]):
-            priority = "High"
-        
-        print(f"Inserting: task='{text}', priority='{priority}'")
-        data = supabase.table("todos").insert({
-            "task": text,
-            "priority": priority
+        # 2. تنفيذ الإضافة في Supabase
+        res = supabase.table("todos").insert({
+            "task": task_text,
+            "priority": "Medium"
         }).execute()
         
-        print(f"Data inserted successfully: {data.data}")
-        return {"status": "success", "data": data.data}
+        return {"status": "success", "data": res.data}
     except Exception as e:
-        print(f"Server Error: {type(e).__name__}: {e}")
-        import traceback
-        traceback.print_exc()
-        return {"status": "error", "message": str(e), "error_type": type(e).__name__}
+        print(f"DEBUG: Error occurred: {str(e)}")
+        return {"status": "error", "message": str(e)}
+
 
 @app.get("/get-todos")
 async def get_todos():
