@@ -24,7 +24,10 @@ class TodoItem(BaseModel):
     task_text: str
 
 @app.post("/add-todo")
-async def add_todo(item: TodoItem): 
+async def add_todo(item: TodoItem):
+    print(f"Received request with item: {item}")
+    print(f"Task text: {item.task_text}")
+    
     try:
         text = item.task_text
         
@@ -40,9 +43,12 @@ async def add_todo(item: TodoItem):
             "priority": priority
         }).execute()
         
+        print(f"Data inserted successfully: {data.data}")
         return {"status": "success", "data": data.data}
     except Exception as e:
         print(f"Server Error: {e}")
+        import traceback
+        traceback.print_exc()
         return {"status": "error", "message": str(e)}
 
 @app.get("/get-todos")
